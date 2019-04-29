@@ -1,0 +1,10 @@
+# IDEs
+/.idea/
+/.vscode/ipch/
+
+# Build files
+/build/
+/cmake-build-*/
+*.o
+*.obj
+*.out

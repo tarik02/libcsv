@@ -1,0 +1,8 @@
+get_filename_component(LibCSV_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+if(NOT TARGET LibCSV::LibCSV)
+    include("${LibCSV_CMAKE_DIR}/LibCSVTargets.cmake")
+endif()
+
+set(LibCSV_LIBRARIES LibCSV::LibCSV)
