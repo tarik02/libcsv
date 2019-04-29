@@ -33,9 +33,13 @@ enum csv_table_state {
 };
 
 struct csv_table {
+  csv_error_callback error_callback;
+  void *error_callback_data;
+
   char separator;
 
   enum csv_table_state state;
+  size_t state_line, state_column;
   char *state_cs;
   size_t state_cs_len, state_cs_cap;
   csv_row *state_row;
@@ -72,9 +76,13 @@ struct csv_row {
 csv_table *csv_table_create() {
   csv_table *table = malloc(sizeof(csv_table));
 
+  table->error_callback = NULL;
+
   table->separator = LIBCSV_DEFAULT_SEPARATOR;
 
   table->state = TABLE_STATE_COLUMN_BEGIN;
+  table->state_line = 1;
+  table->state_column = 0;
   table->state_cs = NULL;
   table->state_cs_len = table->state_cs_cap = 0;
   table->state_row = NULL;
@@ -122,6 +130,11 @@ void csv_table_free(csv_table *table) {
   free(table);
 }
 
+void csv_table_set_error_callback(csv_table *table, csv_error_callback error_callback, void *data) {
+  table->error_callback = error_callback;
+  table->error_callback_data = data;
+}
+
 char csv_table_get_separator(const csv_table *table) {
   return table->separator;
 }
@@ -149,10 +162,22 @@ static void csv_table_state_cs_put(csv_table *table, char c) {
   ++table->state_cs_len;
 }
 
-static void csv_table_state_cs_flush(csv_table *table) {
-  char *str = malloc(table->state_cs_len + 1);
-  memcpy(str, table->state_cs, table->state_cs_len);
-  str[table->state_cs_len] = '\0';
+static void csv_table_state_cs_flush(csv_table *table, bool trim) {
+  size_t old_len = table->state_cs_len;
+  char *state_cs = table->state_cs;
+  size_t len = table->state_cs_len;
+  if (trim) {
+    for (; len --> 0; ) {
+      if (state_cs[len] != ' ' && state_cs[len] != '\t') {
+        break;
+      }
+    }
+    ++len;
+  }
+
+  char *str = malloc(len + 1);
+  memcpy(str, table->state_cs, len);
+  str[len] = '\0';
   table->state_cs_len = 0;
 
   if (!table->has_header) {
@@ -180,12 +205,20 @@ static void csv_table_state_cs_flush(csv_table *table) {
     }
 
     if (table->state_row_column >= table->columns_count) {
-      abort();
+      if (table->error_callback != NULL) {
+        (table->error_callback)(
+          "Unexpected extra column",
+          table->state_line,
+          table->state_column - old_len,
+          table->error_callback_data
+        );
+      }
+      free(str);
+      return;
     }
 
     state_row->values[table->state_row_column] = str;
     ++table->state_row_column;
-    /* TODO: Fix overflow */
   }
 }
 
@@ -227,6 +260,7 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
   enum csv_table_state state = table->state;
 
   while (begin < end) {
+    const char *cp = begin;
     char c = *begin;
 
     switch (state) {
@@ -242,7 +276,7 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
       if (c  == ' ' || c == '\t') {
         /* Skip whitespace */
       } else if (c == '\n' || c == '\r') {
-        csv_table_state_cs_flush(table);
+        csv_table_state_cs_flush(table, true);
         state = TABLE_STATE_NEWLINE; /* TODO: Is this needed? */
         --begin;
       } else if (c == '"') {
@@ -255,11 +289,11 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
 
     case TABLE_STATE_COLUMN_IN:
       if (c == '\n' || c == '\r') {
-        csv_table_state_cs_flush(table);
+        csv_table_state_cs_flush(table, true);
         state = TABLE_STATE_NEWLINE;
         --begin;
       } else if (c == table->separator) {
-        csv_table_state_cs_flush(table);
+        csv_table_state_cs_flush(table, true);
         state = TABLE_STATE_COLUMN_BEGIN;
       } else {
         csv_table_state_cs_put(table, c);
@@ -285,19 +319,34 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
       break;
 
     case TABLE_STATE_COLUMN_IN_ESCAPE_END:
-      if (c == '\n' || c == '\r') {
-        csv_table_state_cs_flush(table);
+      if (c == ' ' || c == '\t') {
+        /* Skip whitespace */
+      } else if (c == '\n' || c == '\r') {
+        csv_table_state_cs_flush(table, false);
         state = TABLE_STATE_NEWLINE;
         --begin;
       } else if (c == table->separator) {
-        csv_table_state_cs_flush(table);
+        csv_table_state_cs_flush(table, false);
         state = TABLE_STATE_COLUMN_BEGIN;
       } else {
-        /* TODO: Error */
+        if (table->error_callback != NULL) {
+          (table->error_callback)(
+            "Unexpected symbol after end of escaped string",
+            table->state_line, table->state_column, table->error_callback_data
+          );
+        }
       }
       break;
     }
 
+    if (cp == begin) {
+      if (c == '\n') {
+        ++table->state_line;
+        table->state_column = 0;
+      } else {
+        ++table->state_column;
+      }
+    }
     ++begin;
   }
 

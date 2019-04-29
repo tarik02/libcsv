@@ -21,10 +21,23 @@
 
 #include "libcsv.h"
 
+#include <deque>
 #include <string>
 #include <memory>
 
 namespace libcsv {
+struct CSVError {
+  std::string message;
+  size_t line, column;
+
+  CSVError() : message {}, line(0), column(0) {}
+
+  CSVError(std::string message, size_t line, size_t column) :
+    message {std::move(message)},
+    line(line),
+    column(column) {}
+};
+
 class CSVColumn {
   friend class CSVRow;
   friend class CSVTable;
@@ -88,15 +101,39 @@ class CSVTable {
 
 private:
   std::shared_ptr<csv_table> table;
+  std::deque<CSVError> errors;
 
 public:
   inline CSVTable() : table {csv_table_create(), csv_table_free} {
     if (!table) {
       throw std::bad_alloc {};
     }
-  }
-  inline CSVTable(std::shared_ptr<csv_table> table) : table {table} {}
 
+    csv_table_set_error_callback(table.get(), &CSVTable::private_error_callback, this);
+  }
+  inline CSVTable(const CSVTable &) = delete;
+  inline CSVTable(CSVTable &&) = default;
+
+private:
+  static void private_error_callback(const char *error, size_t line, size_t column, void *data) {
+    CSVTable *self = reinterpret_cast<CSVTable *>(data);
+    self->errors.emplace_back(error, line, column);
+  }
+
+public:
+  inline bool hasError() const {
+    return !errors.empty();
+  }
+
+  inline bool getError(CSVError &error) {
+    if (!errors.empty()) {
+      error = std::move(errors.front());
+      errors.pop_front();
+      return true;
+    }
+
+    return false;
+  }
 
   inline char getSeparator() const {
     return csv_table_get_separator(table.get());

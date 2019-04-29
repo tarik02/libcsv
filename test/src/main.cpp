@@ -30,7 +30,7 @@ using namespace libcsv;
 static string mlb_players;
 
 
-TEST(csv_table, custom_separator) {
+TEST(CSVTable, custom_separator) {
   CSVTable table;
 
   table.setSeparator('|');
@@ -91,9 +91,121 @@ TEST(csv_table, custom_separator) {
   $ ASSERT_STREQ(row.getValue(c_col1), "Data4.1");
   $ ASSERT_STREQ(row.getValue(c_col2), "Data4.2");
   $ ASSERT_STREQ(row.getValue(c_col3), "Data4.3");
+
+  $ ASSERT_FALSE(table.hasError());
 }
 
-TEST(csv_table, chunked_reading) {
+TEST(CSVTable, escaping) {
+  CSVTable table;
+
+  table.addData("Col1,Col2,Col3\n");
+  table.addData("Value1,Value2,Value3\n");
+  table.addData("Value1,\"Value2\",Value3\n");
+  table.addData("Value1, \"Value2\",Value3\n");
+  table.addData("Value1,\"Value2\" ,Value3\n");
+  table.addData("Value1, \"Value2\" ,Value3\n");
+  table.addData("Value1,  \"Value2\"  ,Value3\n");
+  table.addData("Value1, Value2 ,Value3\n");
+  table.addData("Value1,\" Value2 \",Value3\n");
+  table.addData("Value1, \" Value2 \",Value3\n");
+  table.addData("Value1,\" Value2 \" ,Value3\n");
+
+  $ ASSERT_TRUE(table.hasHeader());
+  $ ASSERT_TRUE(table.hasRow());
+  $ ASSERT_EQ(table.getColumnCount(), 3);
+
+
+  CSVColumn c_col1 = table.getColumn("Col1");
+  $ ASSERT_TRUE(c_col1);
+  $ ASSERT_EQ(c_col1.getIndex(), 0);
+  $ ASSERT_STREQ(c_col1.getName(), "Col1");
+
+  CSVColumn c_col2 = table.getColumn("Col2");
+  $ ASSERT_TRUE(c_col2);
+  $ ASSERT_EQ(c_col2.getIndex(), 1);
+  $ ASSERT_STREQ(c_col2.getName(), "Col2");
+
+  CSVColumn c_col3 = table.getColumn("Col3");
+  $ ASSERT_TRUE(c_col3);
+  $ ASSERT_EQ(c_col3.getIndex(), 2);
+  $ ASSERT_STREQ(c_col3.getName(), "Col3");
+
+
+  CSVRow row;
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), "Value2");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), "Value2");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), "Value2");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), "Value2");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), "Value2");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), "Value2");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), "Value2");
+
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), " Value2 ");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), " Value2 ");
+
+  row = table.nextRow();
+  $ ASSERT_TRUE(row);
+  $ ASSERT_STREQ(row.getValue(c_col2), " Value2 ");
+
+
+  row = table.nextRow();
+  $ ASSERT_FALSE(row);
+
+  $ ASSERT_FALSE(table.hasError());
+}
+
+TEST(CSVTable, error_handling) {
+  CSVTable table;
+  CSVError error;
+
+
+  table.addData("Col1,Col2,\"Col3\" a\n");
+  $ ASSERT_TRUE(table.getError(error));
+  $ ASSERT_FALSE(table.hasError());
+  $ ASSERT_EQ(error.message, "Unexpected symbol after end of escaped string");
+  $ ASSERT_EQ(error.line, 1);
+  $ ASSERT_EQ(error.column, 17);
+
+  $ ASSERT_TRUE(table.getColumn(2));
+  $ ASSERT_STREQ(table.getColumn(2).getName(), "Col3");
+
+
+  table.addData("Value1, Value2, Value3, Value4WTF\n");
+  $ ASSERT_TRUE(table.getError(error));
+  $ ASSERT_FALSE(table.hasError());
+  $ ASSERT_EQ(error.message, "Unexpected extra column");
+  $ ASSERT_EQ(error.line, 2);
+  $ ASSERT_EQ(error.column, 24);
+}
+
+TEST(CSVTable, chunked_reading) {
   /* Read data fully into one table, and chunked into another one */
 
   mt19937 rng;
@@ -176,9 +288,12 @@ TEST(csv_table, chunked_reading) {
 
   $ ASSERT_FALSE(table1.hasRow());
   $ ASSERT_FALSE(table2.hasRow());
+
+  $ ASSERT_FALSE(table1.hasError());
+  $ ASSERT_FALSE(table2.hasError());
 }
 
-TEST(csv_table, streaming) {
+TEST(CSVTable, streaming) {
   CSVTable table;
 
   $ ASSERT_FALSE(table.hasHeader());
@@ -247,14 +362,16 @@ TEST(csv_table, streaming) {
 
   row = table.nextRow();
   $ ASSERT_FALSE(row);
+
+  $ ASSERT_FALSE(table.hasError());
 }
 
-TEST(csv_table, free_nullptr) {
+TEST(CSVTable, free_nullptr) {
   $ ASSERT_NO_FATAL_FAILURE(csv_table_free(nullptr));
 }
 
 
-TEST(csv_row, free_nullptr) {
+TEST(CSVRow, free_nullptr) {
   $ ASSERT_NO_FATAL_FAILURE(csv_row_free(nullptr));
 }
 

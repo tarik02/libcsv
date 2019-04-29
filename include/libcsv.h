@@ -35,6 +35,8 @@ typedef struct csv_table csv_table;
 typedef struct csv_column csv_column;
 typedef struct csv_row csv_row;
 
+typedef void (*csv_error_callback)(const char *error, size_t line, size_t column, void *data);
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +46,8 @@ extern "C" {
 /* Table */
 csv_table *csv_table_create();
 void csv_table_free(csv_table *table);
+
+void csv_table_set_error_callback(csv_table *table, csv_error_callback error_callback, void *data);
 
 char csv_table_get_separator(const csv_table *table);
 void csv_table_set_separator(csv_table *table, char separator);
