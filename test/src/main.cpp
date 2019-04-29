@@ -250,12 +250,12 @@ TEST(csv_table, streaming) {
 }
 
 TEST(csv_table, free_nullptr) {
-  ASSERT_NO_FATAL_FAILURE(csv_table_free(nullptr));
+  $ ASSERT_NO_FATAL_FAILURE(csv_table_free(nullptr));
 }
 
 
 TEST(csv_row, free_nullptr) {
-  ASSERT_NO_FATAL_FAILURE(csv_row_free(nullptr));
+  $ ASSERT_NO_FATAL_FAILURE(csv_row_free(nullptr));
 }
 
 
