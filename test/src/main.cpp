@@ -1,16 +1,18 @@
-// MIT License
-// 
-// Copyright (c) 2019 Tarik02
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2019 Tarik02
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ */
 
 #include <gtest/gtest.h>
 #include <libcsv.hpp>
@@ -92,7 +94,7 @@ TEST(csv_table, custom_separator) {
 }
 
 TEST(csv_table, chunked_reading) {
-  // Read data fully into one table, and chunked into another one
+  /* Read data fully into one table, and chunked into another one */
 
   mt19937 rng;
   rng.seed(42);
@@ -125,7 +127,7 @@ TEST(csv_table, chunked_reading) {
 
   size_t remaining = mlb_players.size();
   while (remaining > 0) {
-    // Read by chunks of size 16-64
+    /* Read by chunks of size 16-64 */
     size_t to_read = min({
       remaining,
       static_cast<size_t>(rng() + 16),

@@ -4,7 +4,7 @@
 #include <string.h>
 
 
-// taxables.csv from https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html
+/* taxables.csv from https://people.sc.fsu.edu/~jburkardt/data/csv/csv.html */
 const char csv_source[] = \
 "\"Index\", \"Item\", \"Cost\", \"Tax\", \"Total\"\n"
 " 1, \"Fruit of the Loom Girl's Socks\",  7.97, 0.60,  8.57\n"

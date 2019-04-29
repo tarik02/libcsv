@@ -1,16 +1,18 @@
-// MIT License
-// 
-// Copyright (c) 2019 Tarik02
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2019 Tarik02
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ */
 
 #include "libcsv.h"
 
@@ -47,9 +49,9 @@ struct csv_table {
   size_t rows_counter;
   size_t rows_begin;
   size_t rows_end;
-  size_t rows_capacity; // = 2^rows_capacity_log
-  size_t rows_capacity_log; // = log2 rows_capacity
-  size_t rows_capacity_mask; // = (~0) >> (sizeof(rows_capacity_mask) * 8 - rows_capacity_log)
+  size_t rows_capacity; /* = 2^rows_capacity_log */
+  size_t rows_capacity_log; /* = log2 rows_capacity */
+  size_t rows_capacity_mask; /* = (~0) >> (sizeof(rows_capacity_mask) * 8 - rows_capacity_log) */
   csv_row **rows_queue;
 };
 
@@ -65,6 +67,8 @@ struct csv_row {
   char *values[0];
 };
 
+
+/* Table */
 csv_table *csv_table_create() {
   csv_table *table = malloc(sizeof(csv_table));
 
@@ -114,7 +118,7 @@ void csv_table_free(csv_table *table) {
   csv_row_free(table->state_row);
 
   free(table->state_cs);
-  // TODO: free other fields
+  /* TODO: free other fields */
 
   free(table);
 }
@@ -182,7 +186,7 @@ static void csv_table_state_cs_flush(csv_table *table) {
 
     state_row->values[table->state_row_column] = str;
     ++table->state_row_column;
-    // TODO: Fix overflow
+    /* TODO: Fix overflow */
   }
 }
 
@@ -193,7 +197,7 @@ static void csv_table_state_flush_row(csv_table *table) {
     if (((table->rows_end + 1) & table->rows_capacity_mask) == table->rows_begin) {
       size_t old_mask = table->rows_capacity_mask;
 
-      table->rows_capacity <<= 1; // *= 2
+      table->rows_capacity <<= 1; /* *= 2 */
       ++table->rows_capacity_log;
       table->rows_capacity_mask = (table->rows_capacity_mask << 1) | 1;
 
@@ -237,10 +241,10 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
 
     case TABLE_STATE_COLUMN_BEGIN:
       if (c  == ' ' || c == '\t') {
-        // Skip whitespace
+        /* Skip whitespace */
       } else if (c == '\n' || c == '\r') {
         csv_table_state_cs_flush(table);
-        state = TABLE_STATE_NEWLINE; // TODO: Is this needed?
+        state = TABLE_STATE_NEWLINE; /* TODO: Is this needed? */
         --begin;
       } else if (c == '"') {
         state = TABLE_STATE_COLUMN_IN_ESCAPE;
@@ -290,7 +294,7 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
         csv_table_state_cs_flush(table);
         state = TABLE_STATE_COLUMN_BEGIN;
       } else {
-        // TODO: Error
+        /* TODO: Error */
       }
       break;
     }
@@ -354,7 +358,7 @@ csv_row *csv_table_next_row(csv_table *table) {
 }
 
 
-// Column
+/* Column */
 size_t csv_column_index(const csv_column *column) {
   return column->index;
 }
@@ -364,7 +368,7 @@ const char *csv_column_name(const csv_column *column) {
 }
 
 
-// Row
+/* Row */
 size_t csv_row_index(const csv_row *row) {
   return row->index;
 }

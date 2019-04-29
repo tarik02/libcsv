@@ -1,16 +1,18 @@
-// MIT License
-// 
-// Copyright (c) 2019 Tarik02
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2019 Tarik02
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ */
 
 #ifndef LIBCSV_H
 #define LIBCSV_H
@@ -39,7 +41,7 @@ extern "C" {
 #endif
 
 
-// Table
+/* Table */
 csv_table *csv_table_create();
 void csv_table_free(csv_table *table);
 
@@ -60,12 +62,12 @@ size_t csv_table_available_rows(const csv_table *table);
 csv_row *csv_table_next_row(csv_table *table);
 
 
-// Column
+/* Column */
 size_t csv_column_index(const csv_column *column);
 const char *csv_column_name(const csv_column *column);
 
 
-// Row
+/* Row */
 size_t csv_row_index(const csv_row *row);
 const char *csv_row_value(const csv_row *row, const csv_column *column);
 
@@ -76,4 +78,4 @@ void csv_row_free(csv_row *row);
 }
 #endif
 
-#endif // LIBCSV_H
+#endif
