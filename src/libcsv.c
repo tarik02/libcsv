@@ -277,8 +277,7 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
         /* Skip whitespace */
       } else if (c == '\n' || c == '\r') {
         csv_table_state_cs_flush(table, true);
-        state = TABLE_STATE_NEWLINE; /* TODO: Is this needed? */
-        --begin;
+        state = TABLE_STATE_NEWLINE;
       } else if (c == '"') {
         state = TABLE_STATE_COLUMN_IN_ESCAPE;
       } else {
