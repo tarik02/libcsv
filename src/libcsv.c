@@ -118,7 +118,6 @@ void csv_table_free(csv_table *table) {
   csv_row_free(table->state_row);
 
   free(table->state_cs);
-  /* TODO: free other fields */
 
   free(table);
 }
