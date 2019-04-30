@@ -73,7 +73,41 @@ const char *csv_column_name(const csv_column *column);
 
 /* Row */
 size_t csv_row_index(const csv_row *row);
+
+bool csv_row_empty(const csv_row *row, const csv_column *column);
+
 const char *csv_row_value(const csv_row *row, const csv_column *column);
+const char *csv_row_value_default(const csv_row *row, const csv_column *column, const char *def);
+
+bool csv_row_value_int8(const csv_row *row, const csv_column *column, int8_t *result);
+int8_t csv_row_value_int8_default(const csv_row *row, const csv_column *column, int8_t def);
+
+bool csv_row_value_uint8(const csv_row *row, const csv_column *column, uint8_t *result);
+uint8_t csv_row_value_uint8_default(const csv_row *row, const csv_column *column, uint8_t def);
+
+bool csv_row_value_int16(const csv_row *row, const csv_column *column, int16_t *result);
+int16_t csv_row_value_int16_default(const csv_row *row, const csv_column *column, int16_t def);
+
+bool csv_row_value_uint16(const csv_row *row, const csv_column *column, uint16_t *result);
+uint16_t csv_row_value_uint16_default(const csv_row *row, const csv_column *column, uint16_t def);
+
+bool csv_row_value_int32(const csv_row *row, const csv_column *column, int32_t *result);
+int32_t csv_row_value_int32_default(const csv_row *row, const csv_column *column, int32_t def);
+
+bool csv_row_value_uint32(const csv_row *row, const csv_column *column, uint32_t *result);
+uint32_t csv_row_value_uint32_default(const csv_row *row, const csv_column *column, uint32_t def);
+
+bool csv_row_value_int64(const csv_row *row, const csv_column *column, int64_t *result);
+int64_t csv_row_value_int64_default(const csv_row *row, const csv_column *column, int64_t def);
+
+bool csv_row_value_uint64(const csv_row *row, const csv_column *column, uint64_t *result);
+uint64_t csv_row_value_uint64_default(const csv_row *row, const csv_column *column, uint64_t def);
+
+bool csv_row_value_float(const csv_row *row, const csv_column *column, float *result);
+float csv_row_value_float_default(const csv_row *row, const csv_column *column, float def);
+
+bool csv_row_value_double(const csv_row *row, const csv_column *column, double *result);
+double csv_row_value_double_default(const csv_row *row, const csv_column *column, double def);
 
 void csv_row_free(csv_row *row);
 

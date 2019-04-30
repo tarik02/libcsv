@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 
 enum csv_table_state {
@@ -80,7 +81,7 @@ csv_table *csv_table_create() {
 
   table->separator = LIBCSV_DEFAULT_SEPARATOR;
 
-  table->state = TABLE_STATE_COLUMN_BEGIN;
+  table->state = TABLE_STATE_NEWLINE;
   table->state_line = 1;
   table->state_column = 0;
   table->state_cs = NULL;
@@ -166,14 +167,15 @@ static void csv_table_state_cs_flush(csv_table *table, bool trim) {
   size_t old_len = table->state_cs_len;
   char *state_cs = table->state_cs;
   size_t len = table->state_cs_len;
-  if (trim) {
-    for (; len --> 0; ) {
-      if (state_cs[len] != ' ' && state_cs[len] != '\t') {
-        break;
-      }
-    }
-    ++len;
-  }
+
+   if (len != 0 && trim) {
+     for (; len --> 0; ) {
+       if (state_cs[len] != ' ' && state_cs[len] != '\t') {
+         break;
+       }
+     }
+     ++len;
+   }
 
   char *str = malloc(len + 1);
   memcpy(str, table->state_cs, len);
@@ -224,8 +226,16 @@ static void csv_table_state_cs_flush(csv_table *table, bool trim) {
 
 static void csv_table_state_flush_row(csv_table *table) {
   if (!table->has_header) {
+    if (table->columns_count == 0) {
+      return;
+    }
+
     table->has_header = true;
   } else if (table->state_row != NULL) {
+    if (table->state_row_column == 0) {
+      return;
+    }
+
     if (((table->rows_end + 1) & table->rows_capacity_mask) == table->rows_begin) {
       size_t old_mask = table->rows_capacity_mask;
 
@@ -420,11 +430,147 @@ size_t csv_row_index(const csv_row *row) {
   return row->index;
 }
 
+bool csv_row_empty(const csv_row *row, const csv_column *column) {
+  if (row == NULL) {
+    return true;
+  }
+
+  const char *value = row->values[column->index];
+  return value == NULL || value[0] == '\0';
+}
+
+
 const char *csv_row_value(const csv_row *row, const csv_column *column) {
   assert(row->table == column->table);
 
   return row->values[column->index];
 }
+
+const char *csv_row_value_default(const csv_row *row, const csv_column *column, const char *def) {
+  const char *value = csv_row_value(row, column);
+  return *value == '\0' ? def : value;
+}
+
+
+bool csv_row_value_int8(const csv_row *row, const csv_column *column, int8_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos = 0;
+  return sscanf(value, "%" SCNd8 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+int8_t csv_row_value_int8_default(const csv_row *row, const csv_column *column, int8_t def) {
+  int8_t result;
+  return csv_row_value_int8(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_uint8(const csv_row *row, const csv_column *column, uint8_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%" SCNu8 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+uint8_t csv_row_value_uint8_default(const csv_row *row, const csv_column *column, uint8_t def) {
+  uint8_t result;
+  return csv_row_value_uint8(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_int16(const csv_row *row, const csv_column *column, int16_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%" SCNd16 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+int16_t csv_row_value_int16_default(const csv_row *row, const csv_column *column, int16_t def) {
+  int16_t result;
+  return csv_row_value_int16(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_uint16(const csv_row *row, const csv_column *column, uint16_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%" SCNu16 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+uint16_t csv_row_value_uint16_default(const csv_row *row, const csv_column *column, uint16_t def) {
+  uint16_t result;
+  return csv_row_value_uint16(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_int32(const csv_row *row, const csv_column *column, int32_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%" SCNd32 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+int32_t csv_row_value_int32_default(const csv_row *row, const csv_column *column, int32_t def) {
+  int32_t result;
+  return csv_row_value_int32(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_uint32(const csv_row *row, const csv_column *column, uint32_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%" SCNu32 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+uint32_t csv_row_value_uint32_default(const csv_row *row, const csv_column *column, uint32_t def) {
+  uint32_t result;
+  return csv_row_value_uint32(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_int64(const csv_row *row, const csv_column *column, int64_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%" SCNd64 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+int64_t csv_row_value_int64_default(const csv_row *row, const csv_column *column, int64_t def) {
+  int64_t result;
+  return csv_row_value_int64(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_uint64(const csv_row *row, const csv_column *column, uint64_t *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%" SCNu64 "%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+uint64_t csv_row_value_uint64_default(const csv_row *row, const csv_column *column, uint64_t def) {
+  uint64_t result;
+  return csv_row_value_uint64(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_float(const csv_row *row, const csv_column *column, float *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%f%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+float csv_row_value_float_default(const csv_row *row, const csv_column *column, float def) {
+  float result;
+  return csv_row_value_float(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_double(const csv_row *row, const csv_column *column, double *result) {
+  const char *value = csv_row_value(row, column);
+  int pos;
+  return sscanf(value, "%lf%n", result, &pos) == 1 && value[pos] == '\0';
+}
+
+double csv_row_value_double_default(const csv_row *row, const csv_column *column, double def) {
+  double result;
+  return csv_row_value_double(row, column, &result) ? result : def;
+}
+
 
 void csv_row_free(csv_row *row) {
   if (row == NULL) {

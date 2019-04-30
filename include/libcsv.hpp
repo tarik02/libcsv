@@ -86,9 +86,104 @@ public:
     return csv_row_index(row.get());
   }
 
-  inline const char *getValue(const CSVColumn column) const {
-    return csv_row_value(row.get(), column.column);
+  inline bool isEmpty(const CSVColumn column) const {
+    return csv_row_empty(row.get(), column.column);
   }
+
+  inline std::string getValue(const CSVColumn column) const {
+    return {csv_row_value(row.get(), column.column)};
+  }
+
+
+  inline bool getValue(const CSVColumn column, int8_t &result) const {
+    return csv_row_value_int8(row.get(), column.column, &result);
+  }
+
+  inline int8_t getValueOr(const CSVColumn column, int8_t def) const {
+    return csv_row_value_int8_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, uint8_t &result) const {
+    return csv_row_value_uint8(row.get(), column.column, &result);
+  }
+
+  inline uint8_t getValueOr(const CSVColumn column, uint8_t def) const {
+    return csv_row_value_uint8_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, int16_t &result) const {
+    return csv_row_value_int16(row.get(), column.column, &result);
+  }
+
+  inline int16_t getValueOr(const CSVColumn column, int16_t def) const {
+    return csv_row_value_int16_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, uint16_t &result) const {
+    return csv_row_value_uint16(row.get(), column.column, &result);
+  }
+
+  inline uint16_t getValueOr(const CSVColumn column, uint16_t def) const {
+    return csv_row_value_uint16_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, int32_t &result) const {
+    return csv_row_value_int32(row.get(), column.column, &result);
+  }
+
+  inline int32_t getValueOr(const CSVColumn column, int32_t def) const {
+    return csv_row_value_int32_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, uint32_t &result) const {
+    return csv_row_value_uint32(row.get(), column.column, &result);
+  }
+
+  inline uint32_t getValueOr(const CSVColumn column, uint32_t def) const {
+    return csv_row_value_uint32_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, int64_t &result) const {
+    return csv_row_value_int64(row.get(), column.column, &result);
+  }
+
+  inline int64_t getValueOr(const CSVColumn column, int64_t def) const {
+    return csv_row_value_int64_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, uint64_t &result) const {
+    return csv_row_value_uint64(row.get(), column.column, &result);
+  }
+
+  inline uint64_t getValueOr(const CSVColumn column, uint64_t def) const {
+    return csv_row_value_uint64_default(row.get(), column.column, def);
+  }
+
+
+  inline bool getValue(const CSVColumn column, float &result) const {
+    return csv_row_value_float(row.get(), column.column, &result);
+  }
+
+  inline float getValueOr(const CSVColumn column, float def) const {
+    return csv_row_value_float_default(row.get(), column.column, def);
+  }
+
+  
+  inline bool getValue(const CSVColumn column, double &result) const {
+    return csv_row_value_double(row.get(), column.column, &result);
+  }
+
+  inline double getValueOr(const CSVColumn column, double def) const {
+    return csv_row_value_double_default(row.get(), column.column, def);
+  }
+
 
   operator bool() const {
     return row.operator bool();
