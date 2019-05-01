@@ -46,11 +46,11 @@ bool print_errors(CSVTable &table) {
 
 TEST(CSVTable, values_ok) {
   static const char *test_data = R"(
-int8,     uint8,     int16,     uint16,     int32,     uint32,     int64,     uint64,     float,     double
-0,        0,         0,         0,          0,         0,          0,         0,          0,         0
--128,     0,         -32768,    0,          -2147483648,0,         -9223372036854775808,0,3.1415,    3.1415
-127,      255,       32767,     65535,      2147483647,4294967295, 9223372036854775807,18446744073709551615,-3e2,-16e5
-"31",     "16",      "5432",    "12221",    "44",      "77",       "14",      "15",       "13.5",    "17.324"
+int8,     uint8,     int16,     uint16,     int32,     uint32,     int64,     uint64,     float,     double,     bool
+0,        0,         0,         0,          0,         0,          0,         0,          0,         0,          true
+-128,     0,         -32768,    0,          -2147483648,0,         -9223372036854775808,0,3.1415,    3.1415,     yes
+127,      255,       32767,     65535,      2147483647,4294967295, 9223372036854775807,18446744073709551615,-3e2,-16e5,yep
+"31",     "16",      "5432",    "12221",    "44",      "77",       "14",      "15",       "13.5",    "17.324",   YeAh
 )";
 
   CSVTable table;
@@ -59,7 +59,7 @@ int8,     uint8,     int16,     uint16,     int32,     uint32,     int64,     ui
   $ ASSERT_FALSE(print_errors(table));
   $ ASSERT_TRUE(table.hasHeader());
   $ ASSERT_TRUE(table.hasRow());
-  $ ASSERT_EQ(table.getColumnCount(), 10);
+  $ ASSERT_EQ(table.getColumnCount(), 11);
   $ ASSERT_EQ(table.availableRows(), 4);
 
 
@@ -92,6 +92,9 @@ int8,     uint8,     int16,     uint16,     int32,     uint32,     int64,     ui
 
   CSVColumn c_double = table.getColumn("double");
   $ ASSERT_TRUE(c_double);
+
+  CSVColumn c_bool = table.getColumn("bool");
+  $ ASSERT_TRUE(c_bool);
 
 
   CSVRow row;
@@ -135,14 +138,17 @@ int8,     uint8,     int16,     uint16,     int32,     uint32,     int64,     ui
     double tmp_double;
     $ ASSERT_TRUE(row.getValue(c_double, tmp_double));
     $ ASSERT_EQ(row.getValueOr(c_double, tmp_double - 1), tmp_double);
+
+    $ ASSERT_TRUE(row.getValueOr(c_bool, false));
   }
 }
 
 TEST(CSVTable, values_wrong) {
   static const char *test_data = R"(
-int8,     uint8,     int16,     uint16,     int32,     uint32,     int64,     uint64,     float,     double
-a,        b,         c,         d,          e,         f,          g,         h,          k,         #idontknowalphabet
-5hi,      -1a3,      int16,     -0a,        aa123,     bb456,      data,      my,         5.5.5,     5e5e5
+int8,     uint8,     int16,     uint16,     int32,     uint32,     int64,     uint64,     float,     double,     bool
+a,        b,         c,         d,          e,         f,          g,         h,          k,         #idontknowalphabet, nope
+5hi,      -1a3,      int16,     -0a,        aa123,     bb456,      data,      my,         5.5.5,     5e5e5,      false
+,,,,,,,,,,f
 )";
 
   mt19937 rng;
@@ -154,8 +160,8 @@ a,        b,         c,         d,          e,         f,          g,         h,
   $ ASSERT_FALSE(print_errors(table));
   $ ASSERT_TRUE(table.hasHeader());
   $ ASSERT_TRUE(table.hasRow());
-  $ ASSERT_EQ(table.getColumnCount(), 10);
-  $ ASSERT_EQ(table.availableRows(), 2);
+  $ ASSERT_EQ(table.getColumnCount(), 11);
+  $ ASSERT_EQ(table.availableRows(), 3);
 
 
   CSVColumn c_int8 = table.getColumn("int8");
@@ -188,10 +194,12 @@ a,        b,         c,         d,          e,         f,          g,         h,
   CSVColumn c_double = table.getColumn("double");
   $ ASSERT_TRUE(c_double);
 
+  CSVColumn c_bool = table.getColumn("bool");
+  $ ASSERT_TRUE(c_bool);
+
 
   CSVRow row;
   while (row = table.nextRow()) {
-    cout << row.getIndex() << endl;
     {
     int8_t tmp_int8, def = rng();
     $ ASSERT_FALSE(row.getValue(c_int8, tmp_int8));
@@ -251,6 +259,8 @@ a,        b,         c,         d,          e,         f,          g,         h,
     $ ASSERT_FALSE(row.getValue(c_double, tmp_double));
     $ ASSERT_EQ(row.getValueOr(c_double, def), def);
     }
+
+    $ ASSERT_FALSE(row.getValueOr(c_bool, true));
   }
 }
 

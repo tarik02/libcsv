@@ -109,6 +109,9 @@ float csv_row_value_float_default(const csv_row *row, const csv_column *column, 
 bool csv_row_value_double(const csv_row *row, const csv_column *column, double *result);
 double csv_row_value_double_default(const csv_row *row, const csv_column *column, double def);
 
+bool csv_row_value_bool(const csv_row *row, const csv_column *column);
+bool csv_row_value_bool_default(const csv_row *row, const csv_column *column, bool def);
+
 void csv_row_free(csv_row *row);
 
 

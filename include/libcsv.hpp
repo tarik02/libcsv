@@ -185,6 +185,15 @@ public:
   }
 
 
+  inline bool getValueBool(const CSVColumn column) const {
+    return csv_row_value_bool(row.get(), column.column);
+  }
+
+  inline bool getValueOr(const CSVColumn column, bool def) const {
+    return csv_row_value_bool_default(row.get(), column.column, def);
+  }
+
+
   operator bool() const {
     return row.operator bool();
   }

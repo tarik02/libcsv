@@ -23,6 +23,28 @@
 #include <inttypes.h>
 
 
+static char convert_to_lower(char c) {
+  if (c >= 'A' && c <= 'Z') {
+    return 'a' + (c - 'A');
+  }
+
+  return c;
+}
+
+static bool equals_ignore_case(const char *a, const char *b) {
+  while (*a && *b) {
+    if (convert_to_lower(*a) != convert_to_lower(*b)) {
+      return false;
+    }
+
+    ++a;
+    ++b;
+  }
+
+  return *a == *b;
+}
+
+
 enum csv_table_state {
   TABLE_STATE_NEWLINE,
 
@@ -168,14 +190,14 @@ static void csv_table_state_cs_flush(csv_table *table, bool trim) {
   char *state_cs = table->state_cs;
   size_t len = table->state_cs_len;
 
-   if (len != 0 && trim) {
-     for (; len --> 0; ) {
-       if (state_cs[len] != ' ' && state_cs[len] != '\t') {
-         break;
-       }
-     }
-     ++len;
-   }
+  if (len != 0 && trim) {
+    for (; len --> 0; ) {
+      if (state_cs[len] != ' ' && state_cs[len] != '\t') {
+        break;
+      }
+    }
+    ++len;
+  }
 
   char *str = malloc(len + 1);
   memcpy(str, table->state_cs, len);
@@ -275,7 +297,6 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
 
     switch (state) {
     case TABLE_STATE_NEWLINE:
-      csv_table_state_flush_row(table);
       if (c != '\n' && c != '\r') {
         state = TABLE_STATE_COLUMN_BEGIN;
         --begin;
@@ -287,7 +308,10 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
         /* Skip whitespace */
       } else if (c == '\n' || c == '\r') {
         csv_table_state_cs_flush(table, true);
+        csv_table_state_flush_row(table);
         state = TABLE_STATE_NEWLINE;
+      } else if (c == table->separator) {
+        csv_table_state_cs_flush(table, true);
       } else if (c == '"') {
         state = TABLE_STATE_COLUMN_IN_ESCAPE;
       } else {
@@ -299,6 +323,7 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
     case TABLE_STATE_COLUMN_IN:
       if (c == '\n' || c == '\r') {
         csv_table_state_cs_flush(table, true);
+        csv_table_state_flush_row(table);
         state = TABLE_STATE_NEWLINE;
         --begin;
       } else if (c == table->separator) {
@@ -332,6 +357,7 @@ void csv_table_add_data_length(csv_table *table, const char *data, size_t length
         /* Skip whitespace */
       } else if (c == '\n' || c == '\r') {
         csv_table_state_cs_flush(table, false);
+        csv_table_state_flush_row(table);
         state = TABLE_STATE_NEWLINE;
         --begin;
       } else if (c == table->separator) {
@@ -569,6 +595,56 @@ bool csv_row_value_double(const csv_row *row, const csv_column *column, double *
 double csv_row_value_double_default(const csv_row *row, const csv_column *column, double def) {
   double result;
   return csv_row_value_double(row, column, &result) ? result : def;
+}
+
+
+bool csv_row_value_bool(const csv_row *row, const csv_column *column) {
+  return csv_row_value_bool_default(row, column, false);
+}
+
+bool csv_row_value_bool_default(const csv_row *row, const csv_column *column, bool def) {
+  static const char *truth_values[] = {
+    "1",
+    "t",
+    "true",
+    "ok",
+    "okay",
+    "yes",
+    "yep",
+    "yeah",
+    NULL,
+  };
+
+  static const char *falsy_values[] = {
+    "0",
+    "f",
+    "false",
+    "not",
+    "no",
+    "nope",
+    "never",
+    NULL,
+  };
+
+  const char *value = csv_row_value(row, column);
+
+  if (def == false) {
+    for (const char **truth_value = truth_values; *truth_value; ++truth_value) {
+      if (equals_ignore_case(value, *truth_value)) {
+        return true;
+      }
+    }
+
+    return false;
+  } else {
+    for (const char **falsy_value = falsy_values; *falsy_value; ++falsy_value) {
+      if (equals_ignore_case(value, *falsy_value)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }
 
 
